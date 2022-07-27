@@ -9,12 +9,14 @@ import (
 
 func main() {
 	// gin.SetMode(gin.ReleaseMode)
-	roter := gin.Default()
+	router := gin.Default()
 	port := ":3000"
 
-	roter.GET("/ping", func(ctx *gin.Context) {
+	routerGroup := router.Group("/api/v1")
+
+	routerGroup.Handle(http.MethodGet, "/ping", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "pong")
 	})
 
-	log.Fatal(roter.Run(port))
+	log.Fatal(router.Run(port))
 }
