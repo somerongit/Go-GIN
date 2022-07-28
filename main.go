@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 )
 
 type User struct {
@@ -15,16 +18,32 @@ type User struct {
 
 type Customer struct {
 	Email         string `json:"email" binding:"required,email"`
+	Password      string `json:"password" binding:"required,password"`
 	Role          string `json:"role" binding:"required,oneof=Basic Admin"`
 	StreetAddress string `json:"street_address"`
 	StreetNumber  int    `json:"street_number" binding:"required_with=StreetAddress"`
 }
 
+func verifyPassword(fl validator.FieldLevel) bool {
+	regx := regexp.MustCompile("\\w{8,}")
+	password := fl.Field().String()
+	return regx.MatchString(password)
+}
+
 func main() {
-	// gin.SetMode(gin.ReleaseMode)
+
 	router := gin.Default()
 	port := ":3000"
 	routerGroup := router.Group("/api/v1")
+
+	staticRouterGroup := router.Group("/storage/v1")
+
+	// Static Storage Route
+	staticRouterGroup.StaticFS("/file", http.Dir("./static"))
+
+	if valid, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		valid.RegisterValidation("password", verifyPassword)
+	}
 
 	routerGroup.Handle(http.MethodGet, "/ping", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "pong")
