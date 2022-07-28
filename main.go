@@ -1,17 +1,22 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
+type user struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
 func main() {
 	// gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	port := ":3000"
-
 	routerGroup := router.Group("/api/v1")
 
 	routerGroup.Handle(http.MethodGet, "/ping", func(ctx *gin.Context) {
@@ -38,7 +43,7 @@ func main() {
 		ctx.String(http.StatusOK, "{\n\tId: 0"+id+",\n\tName: S.Bakuli"+info+"\n}")
 	})
 
-	// Accessing Post data and header info
+	// Accessing Post form data and header info
 	routerGroup.POST("/users", func(ctx *gin.Context) {
 		if ctx.GetHeader("X-Secure-Host") == "3000" {
 			name := ctx.PostForm("name")
@@ -50,6 +55,17 @@ func main() {
 		} else {
 			ctx.String(http.StatusForbidden, "You are not authorized...")
 		}
+	})
+
+	// Accessing Json body data with struct
+	routerGroup.POST("/user", func(ctx *gin.Context) {
+		var usr user
+		if e := ctx.ShouldBindJSON(&usr); e != nil {
+			ctx.String(http.StatusBadRequest, e.Error())
+			return
+		}
+		fmt.Print(usr)
+		ctx.String(http.StatusOK, "User is added...")
 	})
 
 	log.Fatal(router.Run(port))
