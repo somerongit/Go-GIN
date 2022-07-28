@@ -8,9 +8,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type user struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+type User struct {
+	Id   string `json:"id"`   // `uri:"id"`  or `form:"id"` or `header:"X-Request-Id"`
+	Name string `json:"name"` // `uri:"name"`  or `form:"name"` or `header:"X-Request-Name"`
+}
+
+type Customer struct {
+	Email         string `json:"email" binding:"required,email"`
+	Role          string `json:"role" binding:"required,oneof=Basic Admin"`
+	StreetAddress string `json:"street_address"`
+	StreetNumber  int    `json:"street_number" binding:"required_with=StreetAddress"`
 }
 
 func main() {
@@ -59,7 +66,13 @@ func main() {
 
 	// Accessing Json body data with struct
 	routerGroup.POST("/user", func(ctx *gin.Context) {
-		var usr user
+		var usr User
+		/* 	Other options for Data binding
+				ctx.ShouldBindUri(&usr)
+		 		ctx.ShouldBindForm(&usr)
+		 		ctx.ShouldBindHeader(&usr)
+		 		ctx.ShouldBindQuery(&usr)
+		*/
 		if e := ctx.ShouldBindJSON(&usr); e != nil {
 			ctx.String(http.StatusBadRequest, e.Error())
 			return
@@ -68,5 +81,15 @@ func main() {
 		ctx.String(http.StatusOK, "User is added...")
 	})
 
+	// Accessing Json body data with validation
+	routerGroup.POST("/customers", func(ctx *gin.Context) {
+		var usr Customer
+		if e := ctx.ShouldBindJSON(&usr); e != nil {
+			ctx.String(http.StatusBadRequest, e.Error())
+			return
+		}
+		fmt.Print(usr)
+		ctx.String(http.StatusOK, "Customer is added...")
+	})
 	log.Fatal(router.Run(port))
 }
