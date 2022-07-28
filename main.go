@@ -35,8 +35,27 @@ func main() {
 	router := gin.Default()
 	port := ":3000"
 	routerGroup := router.Group("/api/v1")
-
 	staticRouterGroup := router.Group("/storage/v1")
+
+	router.LoadHTMLGlob("./templates/*")
+
+	router.GET("/", func(ctx *gin.Context) {
+		ctx.Redirect(http.StatusTemporaryRedirect, "/home")
+	})
+
+	router.GET("/home", func(ctx *gin.Context) {
+		ctx.HTML(http.StatusOK, "index.html", gin.H{
+			"title":       "Home",
+			"description": "This is home page.",
+		})
+	})
+
+	router.GET("/about", func(ctx *gin.Context) {
+		ctx.HTML(http.StatusOK, "about.html", gin.H{
+			"title":       "About",
+			"description": "This is about page.",
+		})
+	})
 
 	// Static Storage Route
 	staticRouterGroup.StaticFS("/file", http.Dir("./static"))
