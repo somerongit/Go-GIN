@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 type User struct {
@@ -39,10 +40,33 @@ func main() {
 
 	router.LoadHTMLGlob("./templates/*")
 
+	// Basic Auth
+	accounts := map[string]string{
+		"user1": "password1",
+		"user2": "password2",
+		"user3": "password3",
+	}
+
+	router.Use(gin.BasicAuth(accounts))
+
+	// General function for handeling auths
+	router.Use(func(ctx *gin.Context) {
+		requestId := ctx.GetHeader("X-Request-Id")
+
+		if len(requestId) == 0 {
+			id := uuid.New().String()
+			ctx.Writer.Header().Add("X-Request-Id", id)
+		} else {
+			ctx.Writer.Header().Add("X-Request-Id", requestId)
+		}
+	})
+
+	// Redirect one route to another
 	router.GET("/", func(ctx *gin.Context) {
 		ctx.Redirect(http.StatusTemporaryRedirect, "/home")
 	})
 
+	// Home page
 	router.GET("/home", func(ctx *gin.Context) {
 		ctx.HTML(http.StatusOK, "index.html", gin.H{
 			"title":       "Home",
@@ -50,6 +74,7 @@ func main() {
 		})
 	})
 
+	// Home page
 	router.GET("/about", func(ctx *gin.Context) {
 		ctx.HTML(http.StatusOK, "about.html", gin.H{
 			"title":       "About",
