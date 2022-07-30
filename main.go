@@ -47,7 +47,19 @@ func main() {
 		"user3": "password3",
 	}
 
-	router.Use(gin.BasicAuth(accounts))
+	/* For general routes
+	   router.Use(gin.BasicAuth(accounts))
+	   For spacific routes
+	*/
+	authRouteMiddleware := gin.BasicAuth(accounts)
+
+	router.GET("/echo", authRouteMiddleware, func(ctx *gin.Context) {
+		usr := User{
+			Id:   "25",
+			Name: "Someron",
+		}
+		ctx.JSON(http.StatusOK, usr)
+	})
 
 	// General function for handeling auths
 	router.Use(func(ctx *gin.Context) {
@@ -74,7 +86,7 @@ func main() {
 		})
 	})
 
-	// Home page
+	// About page
 	router.GET("/about", func(ctx *gin.Context) {
 		ctx.HTML(http.StatusOK, "about.html", gin.H{
 			"title":       "About",
